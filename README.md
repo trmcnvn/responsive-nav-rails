@@ -1,29 +1,27 @@
-# Responsive::Nav::Rails
+# responsive-nav-rails
 
-TODO: Write a gem description
+http://responsive-nav.com for the Rails asset pipeline
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-    gem 'responsive-nav-rails'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install responsive-nav-rails
+    gem "responsive-nav-rails"
 
 ## Usage
 
-TODO: Write usage instructions here
+In your CSS manifest file:
 
-## Contributing
+    *= responsive-nav
 
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+In your JavaScript manifest file:
+
+    //= responsive-nav
+
+or for the minified version
+
+    //= responsive-nav.min
+
+## License 
+
+[The MIT License](https://github.com/vevix/responsive-nav-rails/blob/master/LICENSE.md)
