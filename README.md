@@ -1,6 +1,6 @@
 # responsive-nav-rails
 
-http://responsive-nav.com for the Rails asset pipeline
+[responsive-nav](http://responsive-nav.com) for the Rails asset pipeline
 
 ## Installation
 
