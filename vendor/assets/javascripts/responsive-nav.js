@@ -1,4 +1,4 @@
-/*! responsive-nav.js v1.0.13
+/*! responsive-nav.js v1.0.14
  * https://github.com/viljamis/responsive-nav.js
  * http://responsive-nav.com
  *
@@ -121,8 +121,6 @@ var responsiveNav = (function (window, document) {
       el.className = el.className.replace(reg, " ").replace(/(^\s*)|(\s*$)/g,"");
     },
 
-    log = function () {},
-
     ResponsiveNav = function (el, options) {
       var i;
 
@@ -135,7 +133,6 @@ var responsiveNav = (function (window, document) {
         customToggle: "",     // Selector: Specify the ID of a custom toggle
         openPos: "relative",  // String: Position of the opened nav, relative or static
         jsClass: "js",        // String: 'JS enabled' class which is added to <html> el
-        debug: false,         // Boolean: Log debug messages to console, true or false
         init: function(){},   // Function: Init callback
         open: function(){},   // Function: Open callback
         close: function(){}   // Function: Close callback
@@ -143,26 +140,11 @@ var responsiveNav = (function (window, document) {
 
       // User defined options
       for (i in options) {
-        if (i in this.options) {
-          this.options[i] = options[i];
-        } else {
-          throw new Error("Responsive Nav doesn't support option: " + i);
-        }
+        this.options[i] = options[i];
       }
 
       // Adds "js" class for <html>
       addClass(docEl, this.options.jsClass);
-
-      // Debug logger
-      if (this.options.debug) {
-        log = function (s) {
-          try {
-            console.log(s);
-          } catch (e) {
-            alert(s);
-          }
-        };
-      }
 
       // Wrapper
       this.wrapperEl = el.replace("#", "");
@@ -185,7 +167,6 @@ var responsiveNav = (function (window, document) {
     };
 
   ResponsiveNav.prototype = {
-
     // Public methods
     destroy: function () {
       this._removeStyles();
@@ -209,8 +190,6 @@ var responsiveNav = (function (window, document) {
       } else {
         navToggle.removeAttribute("aria-hidden");
       }
-
-      log("Destroyed!");
     },
 
     toggle: function () {
@@ -222,8 +201,6 @@ var responsiveNav = (function (window, document) {
 
         navOpen = true;
         opts.open();
-        log("Opened nav");
-
       } else {
         removeClass(nav, "opened");
         addClass(nav, "closed");
@@ -239,7 +216,6 @@ var responsiveNav = (function (window, document) {
 
         navOpen = false;
         opts.close();
-        log("Closed nav");
       }
     },
 
@@ -274,7 +250,6 @@ var responsiveNav = (function (window, document) {
 
     // Private methods
     _init: function () {
-      log("Inited Responsive Nav");
       addClass(nav, "closed");
       this._createToggle();
 
@@ -290,14 +265,12 @@ var responsiveNav = (function (window, document) {
     _createStyles: function () {
       if (!styleElement.parentNode) {
         head.appendChild(styleElement);
-        log("Created 'styleElement' to <head>");
       }
     },
 
     _removeStyles: function () {
       if (styleElement.parentNode) {
         styleElement.parentNode.removeChild(styleElement);
-        log("Removed 'styleElement' from <head>");
       }
     },
 
@@ -317,14 +290,11 @@ var responsiveNav = (function (window, document) {
         }
 
         navToggle = document.getElementById("nav-toggle");
-        log("Default nav toggle created");
-
       } else {
         var toggleEl = opts.customToggle.replace("#", "");
 
         if (document.getElementById(toggleEl)) {
           navToggle = document.getElementById(toggleEl);
-          log("Custom nav toggle created");
         } else {
           throw new Error("The custom nav toggle you are trying to select doesn't exist");
         }
@@ -399,8 +369,6 @@ var responsiveNav = (function (window, document) {
         styleElement.innerHTML = innerStyles;
         innerStyles = "";
       }
-
-      log("Calculated max-height of " + savedHeight + "px and updated 'styleElement'");
     },
 
     _resize: function () {
