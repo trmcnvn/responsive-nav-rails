@@ -1,4 +1,4 @@
-/*! responsive-nav.js v1.0.15
+/*! responsive-nav.js v1.0.16
  * https://github.com/viljamis/responsive-nav.js
  * http://responsive-nav.com
  *
@@ -38,7 +38,7 @@ var responsiveNav = (function (window, document) {
     opts,
     navToggle,
     styleElement = document.createElement("style"),
-    navOpen = false,
+    navOpen,
 
     // fn arg can be an object or a function, thanks to handleEvent
     // read more at: http://www.thecssninja.com/javascript/handleevent
@@ -255,6 +255,7 @@ var responsiveNav = (function (window, document) {
     // Private methods
     _init: function () {
       addClass(nav, "closed");
+      navOpen = false;
       this._createToggle();
 
       addEvent(window, "load", this, false);
