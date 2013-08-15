@@ -1,4 +1,4 @@
-/*! responsive-nav.js v1.0.16
+/*! responsive-nav.js v1.0.20
  * https://github.com/viljamis/responsive-nav.js
  * http://responsive-nav.com
  *
@@ -38,6 +38,7 @@ var responsiveNav = (function (window, document) {
     opts,
     navToggle,
     styleElement = document.createElement("style"),
+    hasAnimFinished,
     navOpen,
 
     // fn arg can be an object or a function, thanks to handleEvent
@@ -131,7 +132,7 @@ var responsiveNav = (function (window, document) {
       // Default options
       this.options = {
         animate: true,        // Boolean: Use CSS3 transitions, true or false
-        transition: 400,      // Integer: Speed of the transition, in milliseconds
+        transition: 350,      // Integer: Speed of the transition, in milliseconds
         label: "Menu",        // String: Label for the navigation toggle
         insert: "after",      // String: Insert the toggle before or after the navigation
         customToggle: "",     // Selector: Specify the ID of a custom toggle
@@ -181,13 +182,13 @@ var responsiveNav = (function (window, document) {
       nav = null;
       _instance = null;
 
-      removeEvent(window, "load", this, false);
       removeEvent(window, "resize", this, false);
-      removeEvent(navToggle, "mousedown", this, false);
+      removeEvent(document.body, "touchmove", this, false);
       removeEvent(navToggle, "touchstart", this, false);
       removeEvent(navToggle, "touchend", this, false);
       removeEvent(navToggle, "keyup", this, false);
       removeEvent(navToggle, "click", this, false);
+      removeEvent(navToggle, "mouseup", this, false);
 
       if (!opts.customToggle) {
         navToggle.parentNode.removeChild(navToggle);
@@ -197,29 +198,33 @@ var responsiveNav = (function (window, document) {
     },
 
     toggle: function () {
-      if (!navOpen) {
-        removeClass(nav, "closed");
-        addClass(nav, "opened");
-        nav.style.position = opts.openPos;
-        setAttributes(nav, {"aria-hidden": "false"});
+      if (hasAnimFinished === true) {
+        if (!navOpen) {
+          removeClass(nav, "closed");
+          addClass(nav, "opened");
+          nav.style.position = opts.openPos;
+          setAttributes(nav, {"aria-hidden": "false"});
 
-        navOpen = true;
-        opts.open();
-      } else {
-        removeClass(nav, "opened");
-        addClass(nav, "closed");
-        setAttributes(nav, {"aria-hidden": "true"});
-
-        if (opts.animate) {
-          setTimeout(function () {
-            nav.style.position = "absolute";
-          }, opts.transition + 10);
+          navOpen = true;
+          opts.open();
         } else {
-          nav.style.position = "absolute";
-        }
+          removeClass(nav, "opened");
+          addClass(nav, "closed");
+          setAttributes(nav, {"aria-hidden": "true"});
 
-        navOpen = false;
-        opts.close();
+          if (opts.animate) {
+            hasAnimFinished = false;
+            setTimeout(function () {
+              nav.style.position = "absolute";
+              hasAnimFinished = true;
+            }, opts.transition + 10);
+          } else {
+            nav.style.position = "absolute";
+          }
+
+          navOpen = false;
+          opts.close();
+        }
       }
     },
 
@@ -227,24 +232,21 @@ var responsiveNav = (function (window, document) {
       var evt = e || window.event;
 
       switch (evt.type) {
-      case "mousedown":
-        this._onmousedown(evt);
-        break;
       case "touchstart":
-        this._ontouchstart(evt);
+        this._onTouchStart(evt);
+        break;
+      case "touchmove":
+        this._onTouchMove(evt);
         break;
       case "touchend":
-        this._ontouchend(evt);
-        break;
-      case "keyup":
-        this._onkeyup(evt);
+      case "mouseup":
+        this._onTouchEnd(evt);
         break;
       case "click":
-        this._onclick(evt);
+        this._preventDefault(evt);
         break;
-      case "load":
-        this._transitions(evt);
-        this._resize(evt);
+      case "keyup":
+        this._onKeyUp(evt);
         break;
       case "resize":
         this._resize(evt);
@@ -255,16 +257,23 @@ var responsiveNav = (function (window, document) {
     // Private methods
     _init: function () {
       addClass(nav, "closed");
+      hasAnimFinished = true;
       navOpen = false;
-      this._createToggle();
 
-      addEvent(window, "load", this, false);
+      this._createToggle();
+      this._transitions();
+      this._resize();
+
       addEvent(window, "resize", this, false);
-      addEvent(navToggle, "mousedown", this, false);
+      addEvent(document.body, "touchmove", this, false);
       addEvent(navToggle, "touchstart", this, false);
       addEvent(navToggle, "touchend", this, false);
+      addEvent(navToggle, "mouseup", this, false);
       addEvent(navToggle, "keyup", this, false);
       addEvent(navToggle, "click", this, false);
+
+      // Init callback
+      opts.init();
     },
 
     _createStyles: function () {
@@ -315,42 +324,48 @@ var responsiveNav = (function (window, document) {
       }
     },
 
-    _onmousedown: function (e) {
-      var evt = e || window.event;
-      // If the user isn't right clicking:
-      if (!(evt.which === 3 || evt.button === 2)) {
-        this._preventDefault(e);
-        this.toggle(e);
+    _onTouchStart: function (e) {
+      e.stopPropagation();
+      this.startX = e.touches[0].clientX;
+      this.startY = e.touches[0].clientY;
+      this.touchHasMoved = false;
+      removeEvent(navToggle, "mouseup", this, false);
+    },
+
+    _onTouchMove: function (e) {
+      if (Math.abs(e.touches[0].clientX - this.startX) > 10 ||
+      Math.abs(e.touches[0].clientY - this.startY) > 10) {
+        this.touchHasMoved = true;
       }
     },
 
-    _ontouchstart: function (e) {
-      // Touchstart event fires before
-      // the mousedown and can wipe it
-      navToggle.onmousedown = null;
+    _onTouchEnd: function (e) {
       this._preventDefault(e);
-      this.toggle(e);
+      if (!this.touchHasMoved) {
+        if (e.type === "touchend") {
+          this.toggle(e);
+          // Prevent click on the underlying menu on Android 2.3
+          var that = this;
+          nav.addEventListener("click", that._preventDefault, true);
+          setTimeout(function () {
+            nav.removeEventListener("click", that._preventDefault, true);
+          }, opts.transition + 100);
+          return;
+        } else {
+          var evt = e || window.event;
+          // If it isn't a right click
+          if (!(evt.which === 3 || evt.button === 2)) {
+            this.toggle(e);
+          }
+        }
+      }
     },
 
-    _ontouchend: function () {
-      // Prevents ghost click from happening on some Android browsers
-      var that = this;
-      nav.addEventListener("click", that._preventDefault, true);
-      setTimeout(function () {
-        nav.removeEventListener("click", that._preventDefault, true);
-      }, opts.transition);
-    },
-
-    _onkeyup: function (e) {
+    _onKeyUp: function (e) {
       var evt = e || window.event;
       if (evt.keyCode === 13) {
         this.toggle(e);
       }
-    },
-
-    _onclick: function (e) {
-      // For older browsers (looking at IE)
-      this._preventDefault(e);
     },
 
     _transitions: function () {
@@ -398,9 +413,6 @@ var responsiveNav = (function (window, document) {
         nav.style.position = opts.openPos;
         this._removeStyles();
       }
-
-      // Init callback
-      opts.init();
     }
 
   };
