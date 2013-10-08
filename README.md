@@ -12,15 +12,15 @@ Add this line to your application's Gemfile:
 
 In your CSS manifest file:
 
-    *= responsive-nav
+    *= require responsive-nav
 
 In your JavaScript manifest file:
 
-    //= responsive-nav
+    //= require responsive-nav
 
 or for the minified version
     
-    //= responsive-nav.min
+    //= require responsive-nav.min
 
 ## License 
 
