@@ -1,3 +1,3 @@
 module ResponsiveNavRails
-  VERSION = "1.0.33"
+  VERSION = "1.0.38"
 end
